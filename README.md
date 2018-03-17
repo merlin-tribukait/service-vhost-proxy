@@ -97,6 +97,26 @@ docker run -d --name docksal-vhost-proxy --label "io.docksal.group=system" --res
     docksal/vhost-proxy
 ```
 
+## Using custom certs
+
+Mount a folder with certs tp `/etc/nginx/certs`. Certs are looked up by virtual host name. 
+
+E.g., certs for `example.com` (or `*.example.com`):
+
+```
+/etc/nginx/certs/example.com.crt
+/etc/nginx/certs/example.com.key
+```
+
+Shared certs (SNI) are also supported. Use `io.docksal.cert-name` label to set the cert name for the container.
+
+Example: for `io.docksal.cert-name=shared` the following cert/key will be used:
+
+```
+/etc/nginx/certs/shared.crt
+/etc/nginx/certs/shared.key
+```
+
 ## Logging and debugging
 
 The following container environment variables can be used to enabled various logging options (disabled by default). 
