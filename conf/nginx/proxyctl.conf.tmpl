@@ -24,7 +24,7 @@ location / {
         dpr("Unlocked " .. ngx.var.host)
         ngx.exit(ngx.HTTP_OK)
       else
-        -- Container start failed. Non-existing environment or something whent wrong.
+        -- Container start failed. Non-existing environment or something went wrong.
         ngx.header.content_type = 'text/html'
         res = ngx.location.capture("/not-found.html")
         ngx.status = ngx.HTTP_NOT_FOUND
