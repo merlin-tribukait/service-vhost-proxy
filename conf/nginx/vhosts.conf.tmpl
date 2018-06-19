@@ -66,8 +66,10 @@
 		{{/* Use default self-signed cert otherwise */}}
 		{{ else }}
 
-		ssl_certificate           /etc/nginx/server.crt;
-		ssl_certificate_key       /etc/nginx/server.key;
+		#ssl_certificate           /etc/nginx/server.crt;
+		#ssl_certificate_key       /etc/nginx/server.key;
+		ssl_certificate           /etc/nginx/certs/x.docksal.io.crt;
+		ssl_certificate_key       /etc/nginx/certs/x.docksal.io.key;
 
 		{{ end }}
 
@@ -135,11 +137,26 @@
 		{{ $vhostCert := trimSuffix ".crt" $vhostCert }}
 		{{ $vhostCert := trimSuffix ".key" $vhostCert }}
 
-		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
-		{{ $cert := (coalesce $certName $vhostCert) }}
+		{{/* Allow certs from the project's repo */}}
+		{{ $projectCrt := (printf "/projects/%s/certs/server.crt" $project) }}
+		{{ $projectKey := (printf "/projects/%s/certs/server.key" $project) }}
+
+		{{ if and (exists $projectCrt) (exists $projectKey) }}
+
+		{{/* Trim file suffix - it will be added later */}}
+		{{ $projectCert := trimSuffix ".crt" $projectCrt }}
 
 		{{/* Generate HTTPS server config */}}
+		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $projectCert) }}
+
+		{{ else }}
+
+		{{/* Use the cert specified on the container or fallback to the best vhost match */}}
+		{{ $cert := (coalesce $certName $vhostCert) }}
+		{{/* Generate HTTPS server config */}}
 		{{ template "https" (dict "Hosts" $hosts "Upstream" $upstream "Cert" $cert) }}
+
+		{{ end }}
 
 	{{ end }}
 	# -------------------------------------------------- #
@@ -156,7 +173,7 @@
 
 	{{ range $host := split $hosts "," }}
 
-		upstream {{ $host }} {
+	upstream {{ $host }} {
 		{{ range $container := $containers }}
 			{{ $addrLen := len $container.Addresses }}
 
@@ -178,7 +195,7 @@
 				{{ end }}
 			{{ end }}
 		{{ end }}
-		}
+	}
 
 		{{ template "http" (dict "Hosts" $host "Upstream" $host) }}
 

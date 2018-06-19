@@ -101,6 +101,8 @@ start ()
 		docker network create "$network" >/dev/null 2>&1
 		# Reconnect vhost-proxy to the project network (in case vhost-proxy has been recently reset)
 		docker network connect "$network" docksal-vhost-proxy >/dev/null 2>&1
+		# Reconnect project containers to the network
+		docker ps -qa --filter "label=com.docker.compose.project=${project_name}" | xargs -I {} docker network connect "$network" {}
 		if [[ $? == 0 ]]; then
 			log "Connected proxy to network: ${network}."
 		fi
